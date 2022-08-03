@@ -31,11 +31,12 @@ enum CalculatorButtons: String {
 
 
 struct ContentView: View {
-
+    
     @State var storeValue = "0"
     @State var currentValue = "0"
     @State var currentOperator = ""
     @State var negative = false
+    @State var myTemp = ""
     
     let cbuttons : [[CalculatorButtons]] = [
         [.clear, .plusminus, .percent, .divide],
@@ -48,6 +49,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             VStack {
+                Text(self.myTemp)
                 Text(self.storeValue)
                 Text(self.currentValue)
                 VStack {
@@ -103,23 +105,25 @@ struct ContentView: View {
         }
         
         switch currentValue {
-            case "0":
+        case "0":
             self.currentValue = "\(pressValue)"
-            case "-0":
+        case "-0":
             self.currentValue = "-\(pressValue)"
-            default:
-                self.currentValue = "\(self.currentValue)\(pressValue)"
+        default:
+            self.currentValue = "\(self.currentValue)\(pressValue)"
         }
     }
     
+    //Currently when you put in 20, press +/- (-20) and hit operator (*) then hit decimal (say, to mutiply times a decimal number (0.10), it appends the decimal to the first number (-20.) and when you type the next number it crashes.
+    
     func PressDecimal() {
         if currentValue != "0" && !currentValue.contains(.init(".")){
-                self.currentValue = "\(self.currentValue)."
-            } else {
-                if !currentValue.contains(.init(".")) {
-                    self.currentValue = "0."
-                }
+            self.currentValue = "\(self.currentValue)."
+        } else {
+            if !currentValue.contains(.init(".")) {
+                self.currentValue = "0."
             }
+        }
         //}
     }
     
@@ -133,9 +137,11 @@ struct ContentView: View {
         }
     }
     
+    //Using float, 100 * 20 % = .19999999. Changed to double, now it's working correctly.
+    
     func PressPercent() {
-        let cvDecimal = Float(currentValue) ?? 0.0
-        let percentMultiplier = Float(0.01)
+        let cvDecimal = Double(currentValue) ?? 0.0
+        let percentMultiplier = Double(0.01)
         let percentValue = cvDecimal * percentMultiplier
         self.currentValue = String(percentValue)
     }
@@ -146,11 +152,19 @@ struct ContentView: View {
         }
     }
     
+    //To fix the division errors, I decided to check for a "." in the equation string (before we store it as the equation string). If there's a decimal in the store or current value, no problem because the result will be a double. If not, I append .0 to the current value as we store the equation. It took me a while because it DOES NOT LIKE me putting the other two lines past the if/else... I think the NSExpression is picky or something. But by duplicating it in the if and the else it works like a champ...
+    
     func Equal() {
         if storeValue != "0" {
-            let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
-            let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-            self.currentValue = RemoveTail(inputString: String(myValue))
+            if ("\(storeValue)\(currentValue)").contains(.init(".")) {
+                let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
+                let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                self.currentValue = RemoveTail(inputString: String(myValue))
+            } else {
+                let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue).0")
+                let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                self.currentValue = RemoveTail(inputString: String(myValue))
+            }
             self.storeValue = "0"
         }
     }
