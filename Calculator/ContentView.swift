@@ -157,12 +157,11 @@ struct ContentView: View {
             if ("\(storeValue)\(currentValue)").contains(.init(".")) {
                 let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
                 let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-                self.currentValue = RemoveTail(inputString: String(myValue))
             } else {
                 let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue).0")
                 let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-                self.currentValue = RemoveTail(inputString: String(myValue))
             }
+            self.currentValue = RemoveTail(inputString: String(myValue))
             self.storeValue = "0"
         }
     }
