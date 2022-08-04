@@ -35,7 +35,6 @@ struct ContentView: View {
     @State var storeValue = "0"
     @State var currentValue = "0"
     @State var currentOperator = ""
-    @State var negative = false
     @State var myTemp = ""
     
     let cbuttons : [[CalculatorButtons]] = [
@@ -84,7 +83,6 @@ struct ContentView: View {
         case .clear:
             storeValue = "0"
             currentValue = "0"
-            negative = false
             currentOperator = ""
         case .plusminus:
             PressNegative()
@@ -127,12 +125,12 @@ struct ContentView: View {
         //}
     }
     
+    // Updated function to just check for he sign.
+
     func PressNegative() {
-        if !self.negative {
-            self.negative = true
+        if !self.currentValue(.init("-")) {
             self.currentValue = "-\(self.currentValue)"
         } else {
-            self.negative = false
             self.currentValue = self.currentValue.replacingOccurrences(of: "-", with: "")
         }
     }
