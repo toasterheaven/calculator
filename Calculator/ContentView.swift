@@ -36,6 +36,8 @@ struct ContentView: View {
     @State var currentValue = "0"
     @State var currentOperator = ""
     @State var myTemp = ""
+    var lastoperator = ""
+    var lastvalue = "0"
     
     let cbuttons : [[CalculatorButtons]] = [
         [.clear, .plusminus, .percent, .divide],
@@ -71,23 +73,28 @@ struct ContentView: View {
     
     
     func buttonpress(press: CalculatorButtons) {
-        switch press {
-        case .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .zero:
-            PressNumber(pressValue: press.rawValue)
-        case .decimal:
-            PressDecimal()
-        case .add, .subtract, .multiply, .divide:
-            PressOperator(operation: press.rawValue)
-        case .equal:
-            Equal()
-        case .clear:
-            storeValue = "0"
-            currentValue = "0"
-            currentOperator = ""
-        case .plusminus:
-            PressNegative()
-        case .percent:
-            PressPercent()
+        if self.buttonpress == false and press.equal {
+            Equal(repeat = true)
+        } else {
+           switch press {
+            case .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .zero:
+                PressNumber(pressValue: press.rawValue)
+            case .decimal:
+                PressDecimal()
+            case .add, .subtract, .multiply, .divide:
+                PressOperator(operation: press.rawValue)
+            case .equal:
+                Equal()
+            case .clear:
+                storeValue = "0"
+                currentValue = "0"
+                currentOperator = ""
+            case .plusminus:
+                PressNegative()
+            case .percent:
+                PressPercent()
+            }
+            self.buttonpress = true
         }
     }
     
@@ -152,18 +159,26 @@ struct ContentView: View {
     
     //To fix the division errors, I decided to check for a "." in the equation string (before we store it as the equation string). If there's a decimal in the store or current value, no problem because the result will be a double. If not, I append .0 to the current value as we store the equation. It took me a while because it DOES NOT LIKE me putting the other two lines past the if/else... I think the NSExpression is picky or something. But by duplicating it in the if and the else it works like a champ...
     
-    func Equal() {
-        if storeValue != "0" {
-            if ("\(storeValue)\(currentValue)").contains(.init(".")) {
-                let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
-                let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-            } else {
-                let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue).0")
-                let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+    func Equal(repeat: bool = false) {
+        if repeat == false {
+            if storeValue != "0" {
+                if ("\(storeValue)\(currentValue)").contains(.init(".")) {
+                    let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
+                    let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                } else {
+                    let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue).0")
+                    let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                }
+                self.lastValue = self.currentValue
+                self.lastoperator = self.currentOperator
+
+                self.currentValue = RemoveTail(inputString: String(myValue))
+                self.storeValue = "0"
             }
-            self.currentValue = RemoveTail(inputString: String(myValue))
-            self.storeValue = "0"
+        } else {
+            //use NSExpression to use currentValue | lastoperator | lastvalue
         }
+        self.buttonpress = false
     }
     
     func RemoveTail(inputString: String) -> String {
