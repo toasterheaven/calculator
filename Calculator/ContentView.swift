@@ -36,8 +36,9 @@ struct ContentView: View {
     @State var currentValue = "0"
     @State var currentOperator = ""
     @State var myTemp = ""
-    var lastoperator = ""
-    var lastvalue = "0"
+    @State var lastOperator = ""
+    @State var lastValue = "0"
+    @State var buttonStore = false
     
     let cbuttons : [[CalculatorButtons]] = [
         [.clear, .plusminus, .percent, .divide],
@@ -50,9 +51,10 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             VStack {
-                Text(self.myTemp)
                 Text(self.storeValue)
                 Text(self.currentValue)
+                Text(self.lastValue)
+                Text(self.currentOperator)
                 VStack {
                     ForEach(cbuttons, id: \.self) {row in
                         HStack {
@@ -73,29 +75,37 @@ struct ContentView: View {
     
     
     func buttonpress(press: CalculatorButtons) {
-        if self.buttonpress == false and press.equal {
-            Equal(repeat = true)
-        } else {
-           switch press {
+        switch press {
             case .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .zero:
                 PressNumber(pressValue: press.rawValue)
+                self.buttonStore = true
             case .decimal:
                 PressDecimal()
+                self.buttonStore = true
             case .add, .subtract, .multiply, .divide:
                 PressOperator(operation: press.rawValue)
+                self.buttonStore = true
             case .equal:
-                Equal()
+               if self.buttonStore == false {
+                   Equal(buttonRepeat: true)
+               } else {
+                   Equal()
+               }
+                self.buttonStore = false
             case .clear:
                 storeValue = "0"
                 currentValue = "0"
+                lastValue = "0"
                 currentOperator = ""
+                lastOperator = ""
+                self.buttonStore = true
             case .plusminus:
                 PressNegative()
+            self.buttonStore = true
             case .percent:
                 PressPercent()
+                self.buttonStore = true
             }
-            self.buttonpress = true
-        }
     }
     
     func PressNumber (pressValue : String){
@@ -106,6 +116,7 @@ struct ContentView: View {
                 self.storeValue = "\(self.storeValue)\(self.currentValue)\(self.currentOperator)"
             }
             self.currentValue = "0"
+            self.lastOperator = self.currentOperator
             self.currentOperator = ""
         }
         
@@ -135,7 +146,7 @@ struct ContentView: View {
     // Updated function to just check for he sign.
 
     func PressNegative() {
-        if !self.currentValue(.init("-")) {
+        if !self.currentValue.contains(.init("-")) {
             self.currentValue = "-\(self.currentValue)"
         } else {
             self.currentValue = self.currentValue.replacingOccurrences(of: "-", with: "")
@@ -159,26 +170,34 @@ struct ContentView: View {
     
     //To fix the division errors, I decided to check for a "." in the equation string (before we store it as the equation string). If there's a decimal in the store or current value, no problem because the result will be a double. If not, I append .0 to the current value as we store the equation. It took me a while because it DOES NOT LIKE me putting the other two lines past the if/else... I think the NSExpression is picky or something. But by duplicating it in the if and the else it works like a champ...
     
-    func Equal(repeat: bool = false) {
-        if repeat == false {
+    func Equal(buttonRepeat: Bool = false) {
+        if buttonRepeat == false {
+            self.lastValue = self.currentValue
             if storeValue != "0" {
                 if ("\(storeValue)\(currentValue)").contains(.init(".")) {
                     let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
                     let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                    self.currentValue = RemoveTail(inputString: String(myValue))
                 } else {
                     let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue).0")
                     let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                    self.currentValue = RemoveTail(inputString: String(myValue))
                 }
-                self.lastValue = self.currentValue
-                self.lastoperator = self.currentOperator
-
-                self.currentValue = RemoveTail(inputString: String(myValue))
                 self.storeValue = "0"
             }
         } else {
             //use NSExpression to use currentValue | lastoperator | lastvalue
+            if ("\(currentValue)\(lastOperator)\(lastValue)").contains(.init(".")) {
+                let myEquation = NSExpression(format: "\(currentValue)\(lastOperator)\(lastValue)")
+                let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                self.currentValue = RemoveTail(inputString: String(myValue))
+            } else {
+                let myEquation = NSExpression(format: "\(currentValue)\(lastOperator)\(lastValue).0")
+                let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
+                self.currentValue = RemoveTail(inputString: String(myValue))
+            }
         }
-        self.buttonpress = false
+        self.buttonStore = false
     }
     
     func RemoveTail(inputString: String) -> String {
