@@ -177,11 +177,11 @@ struct ContentView: View {
                 if ("\(storeValue)\(currentValue)").contains(.init(".")) {
                     let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue)")
                     let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-                    self.currentValue = RemoveTail(inputString: String(myValue))
+                    self.currentValue = RemoveTail(temp: myValue)
                 } else {
                     let myEquation = NSExpression(format: "\(storeValue)\(self.currentValue).0")
                     let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-                    self.currentValue = RemoveTail(inputString: String(myValue))
+                    self.currentValue = RemoveTail(temp: myValue)
                 }
                 self.storeValue = "0"
             }
@@ -190,27 +190,20 @@ struct ContentView: View {
             if ("\(currentValue)\(lastOperator)\(lastValue)").contains(.init(".")) {
                 let myEquation = NSExpression(format: "\(currentValue)\(lastOperator)\(lastValue)")
                 let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-                self.currentValue = RemoveTail(inputString: String(myValue))
+                self.currentValue = RemoveTail(temp: myValue)
             } else {
                 let myEquation = NSExpression(format: "\(currentValue)\(lastOperator)\(lastValue).0")
                 let myValue = myEquation.expressionValue(with: nil, context: nil) as! Double
-                self.currentValue = RemoveTail(inputString: String(myValue))
+                self.currentValue = RemoveTail(temp: myValue)
             }
         }
         self.buttonStore = false
     }
     
-    func RemoveTail(inputString: String) -> String {
-        var result: String = ""
-        let range = NSRange(location: 0, length: inputString.utf16.count)
-        let regex = try! NSRegularExpression(pattern: "\\.0$")
-        if regex.numberOfMatches(in: inputString, range: range) > 0 {
-            result = inputString.trimmingCharacters(in: .init(charactersIn: ".0"))
-        } else {result = inputString}
-        
-        return result
+    func RemoveTail(temp: Double) -> String {
+        var tempVar = String(format: "%g", temp)
+        return tempVar
     }
-    
 }
 
 struct ContentView_Previews: PreviewProvider {
